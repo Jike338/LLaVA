@@ -1,0 +1,11 @@
+==========================================
+SLURM_JOB_ID = 24880541
+SLURM_JOB_NODELIST = b10-12
+TMPDIR = /tmp/SLURM_24880541
+==========================================
+Requirement already satisfied: pip in ./venv/lib/python3.11/site-packages (24.2)
+Looking in indexes: https://download.pytorch.org/whl/cu118
+Collecting torch
+  Downloading https://download.pytorch.org/whl/cu118/torch-2.4.0%2Bcu118-cp311-cp311-linux_x86_64.whl (857.8 MB)
+/var/spool/slurm/d/job24880541/slurm_script: line 25: 39021 Killed                  pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+slurmstepd: error: Detected 1 oom_kill event in StepId=24880541.batch. Some of the step tasks have been OOM Killed.

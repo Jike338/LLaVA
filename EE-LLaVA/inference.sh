@@ -1,0 +1,1 @@
+python3 llava/eval/run_llava.py --image-file "EE-LLaVA/test_images/IMG_8458 copy.jpg" --query "what is the aircraft?" --model-path llava-v1.6-vicuna-7b/

@@ -33,3 +33,19 @@ ckpts*
 
 # Demo
 serve_images/
+
+#images
+# Ignore all image files in any directory
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.webp
+
+
+llava-v1.6-vicuna-7b/
+playground/data/LLaVA-Pretrain/
+venv/
