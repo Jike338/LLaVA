@@ -24,6 +24,7 @@ def main():
     print(torch.utils.cpp_extension.CUDA_HOME)
 
     
+    
     # # Generate and print a random number using PyTorch
     # random_number = torch.rand(1).item()
     # print(f"Generated random number: {random_number}")
@@ -31,4 +32,15 @@ def main():
 if __name__ == "__main__":
     main()
     # check1()
+
+
+
+
+# import torch
+# import transformers
+# import llava  # Replace with the actual module name if different
+
+# print("PyTorch version:", torch.__version__)
+# print("CUDA available:", torch.cuda.is_available())
+# print("Transformers version:", transformers.__version__)
 
