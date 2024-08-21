@@ -49,3 +49,5 @@ serve_images/
 llava-v1.6-vicuna-7b/
 playground/data/LLaVA-Pretrain/
 venv/
+
+Miniconda3-latest-Linux-x86_64.sh
