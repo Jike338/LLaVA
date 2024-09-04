@@ -871,7 +871,10 @@ def train(attn_implementation=None):
             if training_args.fp16:
                 model.to(torch.float16)
         rank0_print("Adding LoRA adapters...")
+        print("before lora", model)
         model = get_peft_model(model, lora_config)
+        print("after lora", model)
+        raise
 
     if 'mpt' in model_args.model_name_or_path:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
@@ -913,6 +916,7 @@ def train(attn_implementation=None):
         
         vision_tower = model.get_vision_tower()
         vision_tower.to(dtype=torch.bfloat16 if training_args.bf16 else torch.float16, device=training_args.device)
+        # vision_tower.to(dtype=torch.float32)
 
         data_args.image_processor = vision_tower.image_processor
         data_args.is_multimodal = True

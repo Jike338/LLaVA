@@ -31,20 +31,25 @@ class AIMVisionTower(nn.Module):
             self.aim_bkb.preprocessor,
             self.aim_bkb.trunk
         )
+        self.vision_tower.requires_grad_(False)
         # self.vision_tower = self.vision_tower.to(torch.bfloat16)
         self._dtype = next(self.vision_tower.parameters()).dtype
         self._hidden_size = 2048
         self.is_loaded = True
-    
+
     @torch.no_grad()
     def forward(self, images):
         # image size torch.Size([32, 3, 336, 336]) resize to 224x224
-        self.vision_tower = self.vision_tower.to(self.dtype)
+        # self.vision_tower = self.vision_tower.to(self.dtype)
         # expected_size = (224, 224)  # Or the expected size your AIM model was trained on
         # images = F.interpolate(images, size=expected_size, mode='bilinear', align_corners=False)
         if not self.is_loaded:
             raise RuntimeError("Model is not loaded. Please call load_model() first.")
-        image_features, _agg_feat = self.vision_tower(images.to(device=self.device, dtype=self.dtype))
+        
+        with torch.cuda.amp.autocast(dtype=self.dtype):
+            # Forward pass in bfloat16
+            image_features, _agg_feat = self.vision_tower(images.to(device=self.device))
+        # image_features, _agg_feat = self.vision_tower(images.to(device=self.device, dtype=self.dtype))
         return image_features.to(torch.bfloat16)
     
     @property
@@ -54,7 +59,7 @@ class AIMVisionTower(nn.Module):
     @property
     def device(self):
         return next(self.vision_tower.parameters()).device
-
+    
     @property
     def hidden_size(self):
         return self._hidden_size
