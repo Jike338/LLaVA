@@ -18,7 +18,8 @@ class AIMVisionTower(nn.Module):
 
         self.is_loaded = False
         if use_clip_processor:
-            self.vision_tower_name = 'openai/clip-vit-large-patch14-336'
+            # self.vision_tower_name = 'openai/clip-vit-large-patch14-336' #for 336x336 input
+            self.vision_tower_name = 'openai/clip-vit-base-patch16' #for 224x224 input
         if not delay_load:
             self.load_model()
 
@@ -39,8 +40,8 @@ class AIMVisionTower(nn.Module):
     def forward(self, images):
         # image size torch.Size([32, 3, 336, 336]) resize to 224x224
         self.vision_tower = self.vision_tower.to(self.dtype)
-        expected_size = (224, 224)  # Or the expected size your AIM model was trained on
-        images = F.interpolate(images, size=expected_size, mode='bilinear', align_corners=False)
+        # expected_size = (224, 224)  # Or the expected size your AIM model was trained on
+        # images = F.interpolate(images, size=expected_size, mode='bilinear', align_corners=False)
         if not self.is_loaded:
             raise RuntimeError("Model is not loaded. Please call load_model() first.")
         image_features, _agg_feat = self.vision_tower(images.to(device=self.device, dtype=self.dtype))
