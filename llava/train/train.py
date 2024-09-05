@@ -871,10 +871,7 @@ def train(attn_implementation=None):
             if training_args.fp16:
                 model.to(torch.float16)
         rank0_print("Adding LoRA adapters...")
-        print("before lora", model)
         model = get_peft_model(model, lora_config)
-        print("after lora", model)
-        raise
 
     if 'mpt' in model_args.model_name_or_path:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
