@@ -4,25 +4,41 @@ import os
 
 import openai
 import time
-
+from openai import OpenAI
 NUM_SECONDS_TO_SLEEP = 0.5
 
 
 def get_eval(content: str, max_tokens: int):
     while True:
         try:
-            response = openai.ChatCompletion.create(
-                model='gpt-4-0314',
-                messages=[{
+            messages=[{
                     'role': 'system',
                     'content': 'You are a helpful and precise assistant for checking the quality of the answer.'
                 }, {
                     'role': 'user',
                     'content': content,
-                }],
-                temperature=0.2,  # TODO: figure out which temperature is best for evaluation
-                max_tokens=max_tokens,
-            )
+                }]
+            client = OpenAI(
+                    # This is the default and can be omitted
+                    api_key='sk-SV_FvI13MswZNf1vk4XRtAdxsrUSWYPSmm6f0r79C0T3BlbkFJdxL107SzYmDLGYnVh9cOcYUJeCY8XLOp4O2DrGqG4A',
+                )
+            response = client.chat.completions.create(model='gpt-4o-mini-2024-07-18',
+                                                    messages=messages,
+                                                    temperature=0.2,
+                                                    max_tokens=max_tokens,
+                                                    n=1)
+            # response = openai.ChatCompletion.create(
+            #     model='gpt-4-0314',
+            #     messages=[{
+            #         'role': 'system',
+            #         'content': 'You are a helpful and precise assistant for checking the quality of the answer.'
+            #     }, {
+            #         'role': 'user',
+            #         'content': content,
+            #     }],
+            #     temperature=0.2,  # TODO: figure out which temperature is best for evaluation
+            #     max_tokens=max_tokens,
+            # )
             break
         except openai.error.RateLimitError:
             pass
@@ -30,7 +46,7 @@ def get_eval(content: str, max_tokens: int):
             print(e)
         time.sleep(NUM_SECONDS_TO_SLEEP)
 
-    return response['choices'][0]['message']['content']
+    return response.choices[0].message.content.strip()
 
 
 def parse_score(review):
@@ -58,12 +74,11 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output')
     parser.add_argument('--max-tokens', type=int, default=1024, help='maximum number of tokens produced in the output')
     args = parser.parse_args()
-
+    
     f_q = open(os.path.expanduser(args.question))
     f_ans1 = open(os.path.expanduser(args.answer_list[0]))
     f_ans2 = open(os.path.expanduser(args.answer_list[1]))
     rule_dict = json.load(open(os.path.expanduser(args.rule), 'r'))
-
     if os.path.isfile(os.path.expanduser(args.output)):
         cur_reviews = [json.loads(line) for line in open(os.path.expanduser(args.output))]
     else:
@@ -76,6 +91,7 @@ if __name__ == '__main__':
 
     handles = []
     idx = 0
+    
     for ques_js, ans1_js, ans2_js in zip(f_q, f_ans1, f_ans2):
         ques = json.loads(ques_js)
         ans1 = json.loads(ans1_js)

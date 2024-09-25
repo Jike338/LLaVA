@@ -24,12 +24,11 @@ class AIMVisionTower(nn.Module):
             self.load_model()
 
     def load_model(self):
-        self.aim_bkb = torch.hub.load("apple/ml-aim", "aim_1B")
-        self.aim_bkb.requires_grad_(False)
+        aim_bkb = torch.hub.load("apple/ml-aim", "aim_1B")
         self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
         self.vision_tower = nn.Sequential(
-            self.aim_bkb.preprocessor,
-            self.aim_bkb.trunk
+            aim_bkb.preprocessor,
+            aim_bkb.trunk
         )
         self.vision_tower.requires_grad_(False)
         # self.vision_tower = self.vision_tower.to(torch.bfloat16)
@@ -51,6 +50,7 @@ class AIMVisionTower(nn.Module):
             image_features, _agg_feat = self.vision_tower(images.to(device=self.device))
         # image_features, _agg_feat = self.vision_tower(images.to(device=self.device, dtype=self.dtype))
         return image_features.to(torch.bfloat16)
+        # return image_features
     
     @property
     def dtype(self):

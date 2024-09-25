@@ -138,10 +138,58 @@ class LlavaMetaForCausalLM(ABC):
         return self.get_model().get_vision_tower()
 
     def encode_images(self, images):
-        # print(1, images.shape, images.device, images.dtype)
         image_features = self.get_model().get_vision_tower()(images)
         image_features = self.get_model().mm_projector(image_features)
         return image_features
+
+    # def encode_images(self, images):
+    #     # Process the images through the vision tower
+    #     image_features = self.get_model().get_vision_tower()(images)
+
+    #     # Get the dtype of mm_projector's parameters and cast image_features to it
+    #     projector_dtype = next(self.get_model().mm_projector.parameters()).dtype
+    #     image_features = image_features.to(projector_dtype)
+
+    #     # Check if there are any NaN values in image_features before passing to mm_projector
+    #     # if torch.isnan(image_features).any():
+    #     #     print("NaN detected in image_features before passing to mm_projector, replacing NaNs with 0.")
+    #     #     image_features = torch.nan_to_num(image_features, nan=0.0)
+
+    #     # Pass through the mm_projector
+    #     image_features = self.get_model().mm_projector(image_features)
+
+    #     # Check if there are any NaN values in image_features after mm_projector
+    #     # if torch.isnan(image_features).any():
+    #     #     print("NaN detected in image_features after passing through mm_projector, replacing NaNs with 0.")
+    #     #     image_features = torch.nan_to_num(image_features, nan=0.0)
+
+    #     return image_features
+
+
+    # def encode_images(self, images):        
+    #     # Check and print vision tower weights
+    #     vision_tower = self.get_model().get_vision_tower()
+    #     for name, param in vision_tower.named_parameters():
+    #         if torch.isnan(param).any():
+    #             print(f"NaN detected in vision tower parameter {name}")
+    #         else:
+    #             print(f"Vision tower parameter {name}: min={param.min()}, max={param.max()}, mean={param.mean()}")
+
+    #     image_features = vision_tower(images)
+    #     mm_projector = self.get_model().mm_projector
+    #     for name, param in mm_projector.named_parameters():
+    #         if torch.isnan(param).any():
+    #             print(f"NaN detected in mm_projector parameter {name}")
+    #         else:
+    #             print(f"mm_projector parameter {name}: min={param.min()}, max={param.max()}, mean={param.mean()}")
+
+    #     self.get_model().mm_projector.to(dtype=torch.bfloat16)
+        
+    #     # Pass through the mm_projector
+    #     image_features = mm_projector(image_features)
+
+    #     return image_features
+
 
     def prepare_inputs_labels_for_multimodal(
         self, input_ids, position_ids, attention_mask, past_key_values, labels,

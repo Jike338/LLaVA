@@ -134,12 +134,20 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         else:
             inputs_embeds = self.get_model().embed_tokens(inputs)
 
-        return super().generate(
+        self.get_model().to(inputs_embeds.dtype)
+        outputs =  super().generate(
             position_ids=position_ids,
             attention_mask=attention_mask,
             inputs_embeds=inputs_embeds,
             **kwargs
         )
+
+                # Add a safeguard for NaN or Inf values
+        if torch.isnan(outputs).any() or torch.isinf(outputs).any():
+            print("Warning: NaN or Inf values found in the model output!")
+            outputs = torch.clamp(outputs, min=1e-9, max=1.0)  # Clamp the values to valid range
+
+        return outputs
 
     def prepare_inputs_for_generation(self, input_ids, past_key_values=None,
                                       inputs_embeds=None, **kwargs):
