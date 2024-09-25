@@ -20,7 +20,7 @@ def get_eval(content: str, max_tokens: int):
                 }]
             client = OpenAI(
                     # This is the default and can be omitted
-                    api_key='sk-SV_FvI13MswZNf1vk4XRtAdxsrUSWYPSmm6f0r79C0T3BlbkFJdxL107SzYmDLGYnVh9cOcYUJeCY8XLOp4O2DrGqG4A',
+                    api_key='',
                 )
             response = client.chat.completions.create(model='gpt-4o-mini-2024-07-18',
                                                     messages=messages,
