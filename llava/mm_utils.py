@@ -181,7 +181,37 @@ def process_images(images, image_processor, model_cfg):
         new_images = torch.stack(new_images, dim=0)
     return new_images
 
+# --------- normal 
+# <image>select luxury furniture 3 - inch gel memory foam mattress topper
 
+# --------
+
+# [1]
+# --------
+# select luxury furniture 3 - inch gel memory foam mattress topper
+
+# [1, 1831, 21684, 2857, 15252, 17252, 29871, 29941, 448, 297, 305, 9127, 3370, 1701, 314, 1775, 509, 404, 304, 2496, 13]
+
+# [1]
+# [1]
+# [1] id
+# [-200, -200]
+# [1, -200] id
+# [1, 1831, 21684, 2857, 15252, 17252, 29871, 29941, 448, 297, 305, 9127, 3370, 1701, 314, 1775, 509, 404, 304, 2496, 13]
+# [1, -200, 1831, 21684, 2857, 15252, 17252, 29871, 29941, 448, 297, 305, 9127, 3370, 1701, 314, 1775, 509, 404, 304, 2496, 13] id
+
+
+
+# --------- reversed 
+# select luxury furniture 3 - inch gel memory foam mattress topper<image>
+
+# --------
+# select luxury furniture 3 - inch gel memory foam mattress topper
+# [1, 1831, 21684, 2857, 15252, 17252, 29871, 29941, 448, 297, 305, 9127, 3370, 1701, 314, 1775, 509, 404, 304, 2496]
+# --------
+
+
+# [1, 29871, 13]
 def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX, return_tensors=None):
     prompt_chunks = [tokenizer(chunk).input_ids for chunk in prompt.split('<image>')]
 

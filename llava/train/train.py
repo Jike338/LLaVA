@@ -74,6 +74,7 @@ class DataArguments:
     is_multimodal: bool = False
     image_folder: Optional[str] = field(default=None)
     image_aspect_ratio: str = 'square'
+    reverse_vl_token: bool = False
 
 
 @dataclass
@@ -312,7 +313,7 @@ def preprocess_multimodal(
     is_multimodal = data_args.is_multimodal
     if not is_multimodal:
         return sources
-
+# [[{'from': 'human', 'value': 'Render a clear and concise summary of the photo.\n<image>'}, {'from': 'gpt', 'value': 'select luxury furniture 3 - inch gel memory foam mattress topper'}]]
     for source in sources:
         for sentence in source:
             if DEFAULT_IMAGE_TOKEN in sentence['value']:
@@ -325,9 +326,8 @@ def preprocess_multimodal(
             if data_args.mm_use_im_start_end:
                 replace_token = DEFAULT_IM_START_TOKEN + replace_token + DEFAULT_IM_END_TOKEN
             sentence["value"] = sentence["value"].replace(DEFAULT_IMAGE_TOKEN, replace_token)
-
     return sources
-
+# [[{'from': 'human', 'value': '<image>\nRender a clear and concise summary of the photo.'}, {'from': 'gpt', 'value': 'select luxury furniture 3 - inch gel memory foam mattress topper'}]]
 
 def preprocess_llama_2(
     sources,
@@ -591,26 +591,60 @@ def preprocess_plain(
 ) -> Dict:
     # add end signal and concatenate together
     conversations = []
+# [[{'from': 'human', 'value': '<image>\nRender a clear and concise summary of the photo.'}, {'from': 'gpt', 'value': 'select luxury furniture 3 - inch gel memory foam mattress topper'}]]
     for source in sources:
         assert len(source) == 2
         assert DEFAULT_IMAGE_TOKEN in source[0]['value']
         source[0]['value'] = DEFAULT_IMAGE_TOKEN
         conversation = source[0]['value'] + source[1]['value'] + conversation_lib.default_conversation.sep
         conversations.append(conversation)
+# ['<image>select luxury furniture 3 - inch gel memory foam mattress topper\n']
     # tokenize conversations
     input_ids = [tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations]
+# [tensor([    1,  -200,  1831, 21684,  2857, 15252, 17252, 29871, 29941,   448,
+        #   297,   305,  9127,  3370,  1701,   314,  1775,   509,   404,   304,
+        #  2496,    13])]
     targets = copy.deepcopy(input_ids)
     for target, source in zip(targets, sources):
+# print(target, source) tensor([    1,  -200,  1831, 21684,  2857, 15252, 17252, 29871, 29941,   448,
+        #   297,   305,  9127,  3370,  1701,   314,  1775,   509,   404,   304,
+        #  2496,    13]) [{'from': 'human', 'value': '<image>'}, {'from': 'gpt', 'value': 'select luxury furniture 3 - inch gel memory foam mattress topper'}]
         tokenized_len = len(tokenizer_image_token(source[0]['value'], tokenizer))
         target[:tokenized_len] = IGNORE_INDEX
+# targets: [tensor([ -100,  -100,  1831, 21684,  2857, 15252, 17252, 29871, 29941,   448,
+        #   297,   305,  9127,  3370,  1701,   314,  1775,   509,   404,   304,
+        #  2496,    13])]
 
     return dict(input_ids=input_ids, labels=targets)
 
 
+def preprocess_plain_reverse(
+    sources: Sequence[str],
+    tokenizer: transformers.PreTrainedTokenizer,
+) -> Dict:
+    # add end signal and concatenate together
+    conversations = []
+# [[{'from': 'human', 'value': '<image>\nRender a clear and concise summary of the photo.'}, {'from': 'gpt', 'value': 'select luxury furniture 3 - inch gel memory foam mattress topper'}]]
+    for source in sources:
+        assert len(source) == 2
+        assert DEFAULT_IMAGE_TOKEN in source[0]['value']
+        source[0]['value'] = DEFAULT_IMAGE_TOKEN
+        conversation = source[1]['value'] + source[0]['value'] + conversation_lib.default_conversation.sep
+        conversations.append(conversation)
+# ['select luxury furniture 3 - inch gel memory foam mattress topper<image>\n']
+    # tokenize conversations
+    input_ids = [tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations]
+    targets = copy.deepcopy(input_ids)
+    for target, source in zip(targets, sources):
+        target[-3:-2] = IGNORE_INDEX
+
+    return dict(input_ids=input_ids, labels=targets)
+
 def preprocess(
     sources: Sequence[str],
     tokenizer: transformers.PreTrainedTokenizer,
-    has_image: bool = False
+    has_image: bool = False,
+    reverse_vl_token: bool = False
 ) -> Dict:
     """
     Given a list of sources, each is a conversation list. This transform:
@@ -620,7 +654,7 @@ def preprocess(
     4. Make a deepcopy as the target. Mask human words with IGNORE_INDEX.
     """
     if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.PLAIN:
-        return preprocess_plain(sources, tokenizer)
+        return preprocess_plain(sources, tokenizer) if not reverse_vl_token else preprocess_plain_reverse(sources, tokenizer)
     if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.LLAMA_2:
         return preprocess_llama_2(sources, tokenizer, has_image=has_image)
     if conversation_lib.default_conversation.version.startswith("v1"):
@@ -668,6 +702,7 @@ class LazySupervisedDataset(Dataset):
         self.tokenizer = tokenizer
         self.list_data_dict = list_data_dict
         self.data_args = data_args
+        self.reverse_vl_token = self.data_args.reverse_vl_token
 
     def __len__(self):
         return len(self.list_data_dict)
@@ -724,7 +759,9 @@ class LazySupervisedDataset(Dataset):
         data_dict = preprocess(
             sources,
             self.tokenizer,
-            has_image=('image' in self.list_data_dict[i]))
+            has_image=('image' in self.list_data_dict[i]),
+            reverse_vl_token=self.reverse_vl_token
+            )
         if isinstance(i, int):
             data_dict = dict(input_ids=data_dict["input_ids"][0],
                              labels=data_dict["labels"][0])
@@ -778,6 +815,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
     train_dataset = LazySupervisedDataset(tokenizer=tokenizer,
                                 data_path=data_args.data_path,
                                 data_args=data_args)
+    item = train_dataset.__getitem__(0)
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
     return dict(train_dataset=train_dataset,
                 eval_dataset=None,
