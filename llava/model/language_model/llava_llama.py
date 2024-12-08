@@ -30,6 +30,9 @@ from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 class LlavaConfig(LlamaConfig):
     model_type = "llava_llama"
 
+    def __init__(self, *args, mask_ratio=0, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mask_ratio = mask_ratio
 
 class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
     config_class = LlavaConfig

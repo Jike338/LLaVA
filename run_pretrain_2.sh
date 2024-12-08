@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=64G
-#SBATCH --time=20:00:00
+#SBATCH --time=9:00:00
 #SBATCH --partition=gpu
 #SBATCH --gpus-per-task=a100:2
 #SBATCH --output=slurm_out/%x_%j.out
@@ -31,7 +31,7 @@ deepspeed llava/train/train_mem.py \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
     --bf16 True \
-    --output_dir ./checkpoints/llava-v1.5-7b-pretrain_mask00 \
+    --output_dir ./checkpoints/llava-v1.5-7b-pretrain_mask075 \
     --num_train_epochs 1 \
     --per_device_train_batch_size 32 \
     --per_device_eval_batch_size 4 \
@@ -51,7 +51,7 @@ deepspeed llava/train/train_mem.py \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
     --report_to wandb \
-    --mask_ratio 0
+    --mask_ratio 0.75
 
 # Deactivate the virtual environment after the job is done
 deactivate

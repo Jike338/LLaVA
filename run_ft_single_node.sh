@@ -6,16 +6,17 @@
 #SBATCH --ntasks=1                   
 #SBATCH --cpus-per-task=1            
 #SBATCH --mem=100G
-#SBATCH --time=00:15:00
+#SBATCH --time=02:00:00
 #SBATCH --partition=gpu
 #SBATCH --gpus-per-task=a100:2       
+#SBTACH --constraint=a100-80gb
 #SBATCH --output=slurm_out/%x_%j.out
 
 module load python
 module spider cuda
 
 cd /scratch1/jikezhon/LLaVA
-conda activate llavanew
+source ~/miniconda3/bin/activate llavanew
 
 
 deepspeed llava/train/train_mem.py \
@@ -25,8 +26,8 @@ deepspeed llava/train/train_mem.py \
     --version v1 \
     --data_path ./playground/data/llava_v1_5_mix665k.json \
     --image_folder ./playground/data \
-    --vision_tower aim \
-    --pretrain_mm_mlp_adapter ./checkpoints/llava-v1.5-7b-pretrain_aim_clip224preprocessor/mm_projector.bin \
+    --vision_tower openai/clip-vit-large-patch14-336 \
+    --pretrain_mm_mlp_adapter ./checkpoints/llava-v1.5-7b-pretrain_mask05/mm_projector.bin \
     --mm_projector_type mlp2x_gelu \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
@@ -34,14 +35,14 @@ deepspeed llava/train/train_mem.py \
     --image_aspect_ratio pad \
     --group_by_modality_length True \
     --bf16 True \
-    --output_dir ./checkpoints/llava-v1.5-7b-lora_aim_singlenode \
+    --output_dir ./checkpoints/test_ft_05 \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 16 \
+    --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 2 \
+    --gradient_accumulation_steps 8 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
-    --save_steps 50000 \
+    --save_steps 500 \
     --save_total_limit 1 \
     --learning_rate 2e-4 \
     --weight_decay 0. \
@@ -51,6 +52,7 @@ deepspeed llava/train/train_mem.py \
     --tf32 True \
     --model_max_length 2048 \
     --gradient_checkpointing True \
-    --dataloader_num_workers 4 \
+    --dataloader_num_workers 1 \
     --lazy_preprocess True \
-    --report_to wandb
+    --report_to wandb \
+    --mask_ratio 0.5

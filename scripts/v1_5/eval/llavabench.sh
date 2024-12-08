@@ -1,10 +1,10 @@
 #!/bin/bash
 
 python -m llava.eval.model_vqa \
-    --model-path liuhaotian/llava-v1.5-13b \
+    --model-path /scratch1/jikezhon/LLaVA/checkpoints/pt_mr_00_ft_bs8_ga4_mr00/checkpoint-8000 \
     --question-file ./playground/data/eval/llava-bench-in-the-wild/questions.jsonl \
     --image-folder ./playground/data/eval/llava-bench-in-the-wild/images \
-    --answers-file ./playground/data/eval/llava-bench-in-the-wild/answers/llava-v1.5-13b.jsonl \
+    --answers-file ./playground/data/eval/llava-bench-in-the-wild/answers/llava-v1.5-7b_pt_mr00_ft_mr00.jsonl \
     --temperature 0 \
     --conv-mode vicuna_v1
 
@@ -16,8 +16,8 @@ python llava/eval/eval_gpt_review_bench.py \
     --rule llava/eval/table/rule.json \
     --answer-list \
         playground/data/eval/llava-bench-in-the-wild/answers_gpt4.jsonl \
-        playground/data/eval/llava-bench-in-the-wild/answers/llava-v1.5-13b.jsonl \
+        playground/data/eval/llava-bench-in-the-wild/answers/llava-v1.5-7b_pt_mr00_ft_mr00.jsonl \
     --output \
-        playground/data/eval/llava-bench-in-the-wild/reviews/llava-v1.5-13b.jsonl
+        playground/data/eval/llava-bench-in-the-wild/reviews/llava-v1.5-7b_pt_mr00_ft_mr00.jsonl
 
-python llava/eval/summarize_gpt_review.py -f playground/data/eval/llava-bench-in-the-wild/reviews/llava-v1.5-13b.jsonl
+python llava/eval/summarize_gpt_review.py -f playground/data/eval/llava-bench-in-the-wild/reviews/llava-v1.5-7b_pt_mr00_ft_mr00.jsonl

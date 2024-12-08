@@ -1,34 +1,17 @@
 #!/bin/bash
 
-#SBATCH --account=kpsounis_171
-#SBATCH --partition=main
-#SBATCH --nodes=1                  
-#SBATCH --ntasks=1                   
-#SBATCH --cpus-per-task=1            
-#SBATCH --mem=100G
-#SBATCH --time=4:00:00
-#SBATCH --partition=gpu
-#SBATCH --gpus-per-task=a100:2       
-#SBATCH --output=slurm_out/%x_%j.out
-
-module load python
-module spider cuda
-
-cd /scratch1/jikezhon/LLaVA
-source ~/miniconda3/bin/activate llavanew
-
-
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
 IFS=',' read -ra GPULIST <<< "$gpu_list"
 
 CHUNKS=${#GPULIST[@]}
 
-CKPT="llava-v1.5-7b"
+CKPT="llava-v1.5-7b-lora_2"
 SPLIT="llava_vqav2_mscoco_test-dev2015"
 
 for IDX in $(seq 0 $((CHUNKS-1))); do
     CUDA_VISIBLE_DEVICES=${GPULIST[$IDX]} python -m llava.eval.model_vqa_loader \
-        --model-path ./checkpoints/llava-v1.5-7b \
+        --model-path ./checkpoints/llava-v1.5-7b-lora \
+        --model-base lmsys/vicuna-7b-v1.5 \
         --question-file ./playground/data/eval/vqav2/$SPLIT.jsonl \
         --image-folder ./playground/data/eval/vqav2/test2015 \
         --answers-file ./playground/data/eval/vqav2/answers/$SPLIT/$CKPT/${CHUNKS}_${IDX}.jsonl \

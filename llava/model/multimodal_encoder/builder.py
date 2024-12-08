@@ -1,6 +1,7 @@
 import os
 from .clip_encoder import CLIPVisionTower, CLIPVisionTowerS2
 from .aim_encoder import AIMVisionTower
+from .clip_encoder_masked import CLIPMaskedVisionTower
 
 
 def build_vision_tower(vision_tower_cfg, **kwargs):
@@ -12,7 +13,10 @@ def build_vision_tower(vision_tower_cfg, **kwargs):
             if use_s2:
                 return CLIPVisionTowerS2(vision_tower, args=vision_tower_cfg, **kwargs)
             else:
-                return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
+                if vision_tower_cfg.mask_ratio > 0:
+                    return CLIPMaskedVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
+                else:
+                    return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
     elif "aim" in vision_tower:
         return AIMVisionTower()
     else:

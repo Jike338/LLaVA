@@ -57,6 +57,7 @@ class LlavaMetaModel:
 
         if self.get_vision_tower() is None:
             vision_tower = build_vision_tower(model_args)
+            print(vision_tower)
 
             if fsdp is not None and len(fsdp) > 0:
                 self.vision_tower = [vision_tower]

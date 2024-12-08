@@ -36,6 +36,7 @@ from llava.model import *
 from llava.mm_utils import tokenizer_image_token
 
 from PIL import Image
+from pprint import pprint
 
 
 local_rank = None
@@ -64,6 +65,7 @@ class ModelArguments:
     mm_use_im_patch_token: bool = field(default=True)
     mm_patch_merge_type: Optional[str] = field(default='flat')
     mm_vision_select_feature: Optional[str] = field(default="patch")
+    mask_ratio: Optional[float] = field(default="0")
 
 
 @dataclass
@@ -827,6 +829,15 @@ def train(attn_implementation=None):
     parser = transformers.HfArgumentParser(
         (ModelArguments, DataArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+    print("Model Arguments:")
+    pprint(vars(model_args))  # or model_args.__dict__
+
+    print("\nData Arguments:")
+    pprint(vars(data_args))  # or data_args.__dict__
+
+    print("\nTraining Arguments:")
+    pprint(vars(training_args))  # or training_args.__dict__)
+
     local_rank = training_args.local_rank
     compute_dtype = (torch.float16 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
 

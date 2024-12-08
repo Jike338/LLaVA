@@ -7,21 +7,21 @@
 #SBATCH --ntasks-per-node=1          
 #SBATCH --cpus-per-task=1           
 #SBATCH --mem=64G
-#SBATCH --time=00:30:00
+#SBATCH --time=00:20:00
 #SBATCH --partition=gpu
 #SBATCH --gpus-per-task=a100:2       
 #SBATCH --output=slurm_out/%x_%j.out
 
+# Generate hostfile from SLURM_NODELIST with slots information
+scontrol show hostnames $SLURM_NODELIST | awk '{print $1, "slots=2"}' > hostfile
 
-
-module load python
-module spider cuda
+MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
+MASTER_PORT=29500    
 
 cd /scratch1/jikezhon/LLaVA
-conda activate llavanew
+source ~/miniconda3/bin/activate llavanew
 
-
-deepspeed llava/train/train_mem.py \
+deepspeed --launcher slurm --num_nodes=2 --num_gpus=4 --hostfile=hostfile llava/train/train_mem.py \
     --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./scripts/zero3.json \
     --model_name_or_path lmsys/vicuna-7b-v1.5 \
@@ -37,11 +37,11 @@ deepspeed llava/train/train_mem.py \
     --image_aspect_ratio pad \
     --group_by_modality_length True \
     --bf16 True \
-    --output_dir ./checkpoints/llava-v1.5-7b-lora_aim_multinode \
+    --output_dir ./checkpoints/test_multinode \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 16 \
+    --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 2 \
+    --gradient_accumulation_steps 4 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 50000 \
